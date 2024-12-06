@@ -1,0 +1,9 @@
+
+*.png
+*.pyc
+/images
+/logs
+/my_dir
+/tuner_results
+/tuner_results
+*.7z
