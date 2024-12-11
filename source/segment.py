@@ -9,19 +9,13 @@ def maskPurpleBG(img):
     """ 
     # Change image color space
     img_hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
-    # Note that 0≤V≤1, 0≤S≤1, 0≤H≤360 and if H<0 then H←H+360
-    # 8-bit images: V←255V,S←255S,H←H/2(to fit to 0 to 255)
-    # see https://docs.opencv.org/4.5.3/de/d25/imgproc_color_conversions.html#color_convert_rgb_hsv
-
-    # Define background color range in HSV space
-    #light_blue = (180,50,0)  # converted from HSV value obtained with colorpicker (150,50,0)
-    #dark_blue  = (180,180,255)  # converted from HSV value obtained with colorpicker (250,100,100)
 
     light_purple = (35,0,35)  # converted from HSV value obtained with colorpicker (150,50,0)
-    dark_purple  = (180,255,255)  # converted from HSV value obtained with colorpicker (250,100,100)
+    dark_purple  = (250,255,255)  # converted from HSV value obtained with colorpicker (250,100,100)
 
-    # Mark pixels outside background color range
     mask = ~cv.inRange(img_hsv, light_purple, dark_purple)
+    mask = cv.morphologyEx(mask, cv.MORPH_OPEN, np.ones((7,7),np.uint8), mask)
+    # cv.imshow("Mask", mask)
     return mask
 
 
@@ -29,7 +23,7 @@ if __name__ == "__main__":
     """ Test segmentation functions"""
     #data_path = r'C:\GoogleDrive\U-shaped assambly cell\SmartBeamerV2\data\TwoEuro'
     #data_path = r'C:\GoogleDrive\U-shaped assambly cell\SmartBeamerV2\data\OneEuro'
-    data_path = r'images\FiveCent'
+    data_path = r'C:\Users\stijn\Pictures\deeplearning\FiveCent'
 
     # grab the list of images in our data directory
     print("[INFO] loading images...")
