@@ -3,6 +3,8 @@ import glob
 import cv2 as cv
 import numpy as np
 
+
+
 def maskPurpleBG(img):
     """ Asssuming the background is blue, segment the image and return a
         BW image with foreground (white) and background (black)

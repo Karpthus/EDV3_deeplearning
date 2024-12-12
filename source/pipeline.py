@@ -7,7 +7,27 @@ import numpy as np
 import os
 import glob
 import matplotlib.pyplot as plt
+from datetime import datetime
 from segment import maskPurpleBG  # Custom function to mask the purple background
+
+
+# Value             |Best Value So Far |Hyperparameter
+# 128               |64                |filters_1
+# 1                 |2                 |num_conv_layers
+# 64                |32                |filters_2
+# 64                |256               |dense_units
+# 0.01              |0.001             |learning_rate
+# 32                |64                |filters_3
+# 32                |96                |filters_4
+# 0.2               |0.4               |dropout_conv1
+# 0.2               |0.1               |dropout_conv_2
+# 0.2               |0.4               |dropout_dense
+# 0.1               |0.2               |dropout_conv_3
+# 10                |10                |tuner/epochs
+# 0                 |4                 |tuner/initial_epoch
+# 0                 |1                 |tuner/bracket
+# 0                 |1                 |tuner/round
+
 
 # Path to dataset
 data_path = r"C:\Users\stijn\Pictures\deeplearning"  # Replace with your dataset directory
@@ -84,6 +104,10 @@ val_dataset = tf.data.Dataset.from_generator(
 train_steps_per_epoch = len(train_generator)  # Number of batches per epoch for training
 val_steps_per_epoch = len(val_generator)      # Number of batches per epoch for validation
 
+# TensorBoard Callback Directory
+log_dir = os.path.join("logs", "fit", datetime.now().strftime("%Y%m%d-%H%M%S"))
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+
 # Define the Hypermodel
 def build_model(hp):
     model = keras.Sequential()
@@ -97,7 +121,10 @@ def build_model(hp):
     ))
     model.add(layers.MaxPooling2D(2, 2))
     
-    # Additional Conv Layers
+    # Optional Dropout after the first Conv layer
+    model.add(layers.Dropout(rate=hp.Float('dropout_conv1', min_value=0.1, max_value=0.5, step=0.1)))
+    
+    # Additional Conv Layers with Dropout
     for i in range(hp.Int('num_conv_layers', 1, 3)):
         model.add(layers.Conv2D(
             filters=hp.Int(f'filters_{i+2}', min_value=32, max_value=128, step=32),
@@ -105,13 +132,21 @@ def build_model(hp):
             activation='relu'
         ))
         model.add(layers.MaxPooling2D(2, 2))
-    
-    # Flatten and Dense Layers
+        model.add(layers.Dropout(rate=hp.Float(f'dropout_conv_{i+2}', min_value=0.1, max_value=0.5, step=0.1)))
+
+    # Flatten and Dense Layers with Dropout
     model.add(layers.Flatten())
+    
+    # Dense Layer
     model.add(layers.Dense(
         units=hp.Int('dense_units', min_value=64, max_value=256, step=64),
         activation='relu'
     ))
+    
+    # Dropout after Dense Layer
+    model.add(layers.Dropout(rate=hp.Float('dropout_dense', min_value=0.1, max_value=0.5, step=0.1)))
+    
+    # Output Layer
     model.add(layers.Dense(len(label_names), activation='softmax'))
     
     # Compile the model with a tunable learning rate
@@ -121,7 +156,6 @@ def build_model(hp):
         metrics=['accuracy']
     )
     return model
-
 
 
 # Instantiate the Hyperband tuner
@@ -145,7 +179,7 @@ tuner.search(
     epochs=10,
     steps_per_epoch=train_steps_per_epoch,
     validation_steps=val_steps_per_epoch,
-    callbacks=[stop_early]
+    callbacks=[stop_early, tensorboard_callback]
 )
 
 # Retrieve the best model
@@ -160,7 +194,14 @@ The optimal hyperparameters:
 
 # Train the best model
 best_model = tuner.hypermodel.build(best_hps)
-history = best_model.fit(train_dataset, validation_data=val_dataset, epochs=10)
+history = best_model.fit(
+    train_dataset,
+    validation_data=val_dataset,
+    steps_per_epoch=train_steps_per_epoch,
+    validation_steps=val_steps_per_epoch,
+    epochs=10,
+    callbacks=[tensorboard_callback]
+)
 
 # Save the best model
 best_model.save('best_model.keras')
@@ -173,3 +214,7 @@ plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
 plt.legend()
 plt.show()
+
+# Instructions to run TensorBoard
+print(f"To view TensorBoard logs, run the following command in your terminal:")
+print(f"tensorboard --logdir={os.path.abspath(log_dir)}")
