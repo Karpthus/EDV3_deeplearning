@@ -9,6 +9,9 @@ import glob
 import matplotlib.pyplot as plt
 from datetime import datetime
 from segment import maskPurpleBG  # Custom function to mask the purple background
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import itertools
+
 
 
 # Value             |Best Value So Far |Hyperparameter
@@ -203,8 +206,52 @@ history = best_model.fit(
     callbacks=[tensorboard_callback]
 )
 
+# # Evaluate the best model on the validation dataset
+# val_labels = []  # True labels
+# val_preds = []   # Predicted labels
+
+# # Loop through the validation dataset to collect predictions and true labels
+# for images, labels in val_dataset:
+#     predictions = best_model.predict(images)  # Make predictions
+#     val_preds.extend(np.argmax(predictions, axis=1))  # Get predicted class indices
+#     val_labels.extend(np.argmax(labels.numpy(), axis=1))  # Get true class indices
+
+# # Generate confusion matrix
+# cm = confusion_matrix(val_labels, val_preds)
+# print("Confusion Matrix:")
+# print(cm)
+
+# # Plot confusion matrix as a heatmap
+# def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion Matrix', cmap=plt.cm.Blues):
+#     plt.figure(figsize=(8, 8))
+#     plt.imshow(cm, interpolation='nearest', cmap=cmap)
+#     plt.title(title)
+#     plt.colorbar()
+
+#     tick_marks = np.arange(len(classes))
+#     plt.xticks(tick_marks, classes, rotation=45)
+#     plt.yticks(tick_marks, classes)
+
+#     if normalize:
+#         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+#     thresh = cm.max() / 2.0
+#     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+#         plt.text(j, i, f"{cm[i, j]:.2f}" if normalize else cm[i, j],
+#                  horizontalalignment="center",
+#                  color="white" if cm[i, j] > thresh else "black")
+
+#     plt.ylabel('True Label')
+#     plt.xlabel('Predicted Label')
+#     plt.tight_layout()
+#     plt.show()
+
+# # Call the function to plot the confusion matrix
+# plot_confusion_matrix(cm, classes=label_names, title="Confusion Matrix")
+
+
 # Save the best model
-best_model.save('best_model.keras')
+best_model.save('best_model1313.keras')
 
 # Plot the results
 plt.plot(history.history['accuracy'], label='Training Accuracy')

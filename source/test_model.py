@@ -11,7 +11,7 @@ print("Model loaded successfully.")
 # Parameters
 image_shape = (224, 224)  # Input size for the model
 confidence_threshold = 0.80  # Minimum confidence to display prediction
-output_video_path = 'output.avi'  # Path for recorded video file
+output_video_path = 'output.mp4'  # Path for recorded video file
 
 # Function to preprocess each frame
 def preprocess_frame(image):
